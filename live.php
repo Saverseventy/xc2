@@ -49,8 +49,9 @@ $live_map = [
     1023 => "https://live.nxplay.com.br/WESTERN_BOUND/index.m3u8",
     1024 => "https://live.nxplay.com.br/WHE_PLAY/index.m3u8",
     1025 => "https://live.nxplay.com.br/XSPORTS/index.m3u8",
-    1026 => "https://abslive.akamaized.net/dash/live/2099522/gnews3/manifest.mpd|user-agent=Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0&referrer=https://www.iwanttfc.com/&origin=https://www.iwanttfc.com#manifest_type=mpd&drm_scheme=cenc&drm_key_id=d5d848730e4a4f9b962290039dd2b96b&drm_key=c959dc12f1bff5a66d030117fb7e9855"
-];
+    1026 => "https://abslive.akamaized.net/dash/live/2099522/gnews3/manifest.mpd"
+    
+    ];
 
 if (!isset($live_map[$id])) {
     header("HTTP/1.1 404 Not Found");
