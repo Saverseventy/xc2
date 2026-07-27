@@ -9,14 +9,17 @@ $pass = $_GET["password"] ?? "";
 $id   = (int)($_GET["id"] ?? 0);
 $fmt  = $_GET["format"] ?? "ts";
 
-// Check login
+// Auth check
 if ($user !== $VALID_USER || $pass !== $VALID_PASS || !$id) {
     header("HTTP/1.1 404 Not Found");
     die("#EXTM3U\n# Invalid login or stream ID");
 }
 
-// Full channel list mapping: stream_id => REAL URL
-$map = [
+// ==============================================
+// 🟢 COMPLETE LIVE CHANNEL LIST — ONLY HERE NOW
+// stream_id = num + 1000 → PERFECT SYNC
+// ==============================================
+$live_map = [
     1001 => "https://live.nxplay.com.br/TNT/index.m3u8",
     1002 => "https://live.nxplay.com.br/TNT_NOVELAS/index.m3u8",
     1003 => "https://live.nxplay.com.br/TNT_SERIES/index.m3u8",
@@ -44,17 +47,11 @@ $map = [
     1025 => "https://live.nxplay.com.br/XSPORTS/index.m3u8"
 ];
 
-if (!isset($map[$id])) {
+if (!isset($live_map[$id])) {
     header("HTTP/1.1 404 Not Found");
     die("# Stream ID $id not found");
 }
 
-$realUrl = $map[$id];
-
-// 🎯 Correct: Always send original .m3u8 link (never convert to fake .ts)
-if ($fmt === "ts") {
-    header("Location: $realUrl", true, 302);
-} else {
-    header("Location: $realUrl", true, 302);
-}
+// Redirect to real stream URL
+header("Location: " . $live_map[$id], true, 302);
 exit;
