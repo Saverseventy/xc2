@@ -1,11 +1,22 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-$VALID_USER="admin"; $VALID_PASS="123456";
-$user=$_GET["username"]??""; $pass=$_GET["password"]??"";
-$id=(int)($_GET["id"]??0);
 
-if($user!==$VALID_USER||$pass!==$VALID_PASS||!$id){header("HTTP/1.1 404 Not Found");exit("# Not Found");}
+// ✅ SAME USER LIST — COPY THIS BLOCK TO movie.php & series.php TOO!
+$USERS = [
+    "admin"  => ["password" => "123456"],
+    "user1"  => ["password" => "pass123"],
+    "user2"  => ["password" => "pass456"]
+];
 
+$user = $_GET["username"] ?? "";
+$pass = $_GET["password"] ?? "";
+$id   = (int)($_GET["id"] ?? 0);
+$fmt  = $_GET["format"] ?? "ts";
+
+if (!isset($USERS[$user]) || $USERS[$user]["password"] !== $pass || !$id) {
+    header("HTTP/1.1 404 Not Found");
+    die("#EXTM3U\n# Invalid login or stream ID");
+}
 $map=[
     // 3% – Three Percent
     3001001=>"https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
