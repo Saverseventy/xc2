@@ -95,7 +95,8 @@ $live_raw = [
     ["num"=>22,"name"=>"WARNER CHANNEL","cat"=>"2","logo"=>"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Warner_Channel_2019.svg/120px-Warner_Channel_2019.svg.png"],
     ["num"=>23,"name"=>"WESTERN BOUND","cat"=>"2","logo"=>$logo_base],
     ["num"=>24,"name"=>"WHE PLAY","cat"=>"1","logo"=>$logo_base],
-    ["num"=>25,"name"=>"X SPORTS","cat"=>"4","logo"=>$logo_base]
+    ["num"=>25,"name"=>"X SPORTS","cat"=>"4","logo"=>$logo_base],
+    ["num"=>26,"name"=>"Gma News","cat"=>"4","logo"=>$logo_base]
 ];
 
 $live = [];
