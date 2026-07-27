@@ -1,2 +1,7 @@
 RewriteEngine On
-Options -Indexes
+Options -MultiViews
+
+# Handle /live/username/pass/id.ts/m3u8
+RewriteRule ^live/([^/]+)/([^/]+)/([^/]+)\.(ts|m3u8)$ live.php?username=$1&password=$2&id=$3&format=$4 [L]
+
+DirectoryIndex index.html index.php
