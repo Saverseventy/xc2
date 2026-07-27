@@ -1,19 +1,23 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 
-$VALID_USER = "admin";
-$VALID_PASS = "123456";
+// ✅ SAME USER LIST — COPY THIS BLOCK TO movie.php & series.php TOO!
+$USERS = [
+    "admin"  => ["password" => "123456"],
+    "user1"  => ["password" => "pass123"],
+    "user2"  => ["password" => "pass456"]
+];
 
 $user = $_GET["username"] ?? "";
 $pass = $_GET["password"] ?? "";
 $id   = (int)($_GET["id"] ?? 0);
 $fmt  = $_GET["format"] ?? "ts";
 
-// Auth check
-if ($user !== $VALID_USER || $pass !== $VALID_PASS || !$id) {
+if (!isset($USERS[$user]) || $USERS[$user]["password"] !== $pass || !$id) {
     header("HTTP/1.1 404 Not Found");
     die("#EXTM3U\n# Invalid login or stream ID");
 }
+
 
 // ==============================================
 // 🟢 COMPLETE LIVE CHANNEL LIST — ONLY HERE NOW
