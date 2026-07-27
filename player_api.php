@@ -96,7 +96,7 @@ $live_raw = [
     ["num"=>23,"name"=>"WESTERN BOUND","cat"=>"2","logo"=>$logo_base],
     ["num"=>24,"name"=>"WHE PLAY","cat"=>"1","logo"=>$logo_base],
     ["num"=>25,"name"=>"X SPORTS","cat"=>"4","logo"=>$logo_base],
-    ["num"=>26,"name"=>"Gma News","cat"=>"4","logo"=>$logo_base]
+    ["num"=>26,"name"=>"Gma News","cat"=>"4","logo"=>$logo_base],
 ];
 
 $live = [];
