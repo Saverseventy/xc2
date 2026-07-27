@@ -1,0 +1,14 @@
+<!DOCTYPE html><html><body style="background:#111;color:#fff;padding:20px;font-family:Arial">
+<h1>✅ Xtream IPTV Server Running</h1>
+<h3>🔐 Login Details:</h3>
+<pre>
+Server URL: <span id="u"></span>
+Username: admin
+Password: 123456
+</pre>
+<p>📋 M3U Link: <span id="m"></span></p>
+<script>
+let loc=window.location.href;document.getElementById('u').textContent=loc.replace(/\/$/,'');
+document.getElementById('m').textContent=loc+'get.php?username=admin&password=123456&type=m3u_plus';
+</script>
+</body></html>
