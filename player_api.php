@@ -67,8 +67,10 @@ $live_categories = [
     ["category_id" => "2", "category_name" => "🎬 Movies & Series",  "parent_id" => 0],
     ["category_id" => "3", "category_name" => "👨‍👩‍👧‍👦 Family & Kids", "parent_id" => 0],
     ["category_id" => "4", "category_name" => "⚽ Sports",           "parent_id" => 0],
-    ["category_id" => "5", "category_name" => "📰 News & Info",      "parent_id" => 0]
+    ["category_id" => "5", "category_name" => "📰 News & Info",      "parent_id" => 0],
+    ["category_id" => "6", "category_name" => "🇵🇭 Philippines",     "parent_id" => 0]
 ];
+
 
 $live_raw = [
     ["num"=>1,"name"=>"TNT","cat"=>"2","logo"=>"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/TNT_Serious_Logo.svg/120px-TNT_Serious_Logo.svg.png"],
@@ -96,7 +98,8 @@ $live_raw = [
     ["num"=>23,"name"=>"WESTERN BOUND","cat"=>"2","logo"=>$logo_base],
     ["num"=>24,"name"=>"WHE PLAY","cat"=>"1","logo"=>$logo_base],
     ["num"=>25,"name"=>"X SPORTS","cat"=>"4","logo"=>$logo_base],
-    ["num"=>26,"name"=>"Gma News","cat"=>"4","logo"=>$logo_base],
+["num"=>26,"name"=>"GMA News TV","cat"=>"6","logo"=>"https://upload.wikimedia.org/wikipedia/en/thumb/0/04/GMA_News_TV_Logo_Vector.svg/1280px-GMA_News_TV_Logo_Vector.svg.png"],
+
 ];
 
 $live = [];
