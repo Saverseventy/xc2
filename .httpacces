@@ -1,0 +1,18 @@
+RewriteEngine On
+
+# Route all xtream-api requests to player_api.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^player_api\.php$ - [L]
+RewriteRule ^(.*)$ player_api.php [L,QSA]
+
+# Security & CORS headers
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type, User-Agent"
+
+# Disable caching for API responses
+<FilesMatch "\.php$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+</FilesMatch>
