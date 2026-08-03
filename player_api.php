@@ -2,7 +2,14 @@
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Headers: Content-Type, User-Agent");
+header("Cache-Control: no-cache, no-store, must-revalidate");
+
+// Handle OPTIONS preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 // --------------------------
 // LOGIN CREDENTIALS
@@ -10,10 +17,12 @@ header("Access-Control-Allow-Headers: Content-Type");
 $VALID_USER = "admin";
 $VALID_PASS = "123456";
 
-// ✅ SUPPORT BOTH GET & POST (critical for many players)
-$input = array_merge($_GET, $_POST);
+// ✅ Read input from ALL sources — GET, POST, and JSON body
+$input = $_GET + $_POST;
+$jsonInput = json_decode(file_get_contents('php://input'), true) ?: [];
+$input += $jsonInput;
 
-$user      = $input["username"] ?? "";
+$user      = trim($input["username"] ?? "");
 $pass      = $input["password"] ?? "";
 $action    = $input["action"] ?? "";
 $catFilter = $input["category_id"] ?? "";
@@ -24,13 +33,16 @@ $series_id = $input["series_id"] ?? "";
 // AUTHENTICATION
 // --------------------------
 if ($user !== $VALID_USER || $pass !== $VALID_PASS) {
+    http_response_code(200); // Always return 200 — players break on error codes
     echo json_encode([
         "user_info" => [
+            "username"   => $user,
+            "password"   => $pass,
             "auth"       => 0,
             "status"     => "Disabled",
             "message"    => "Invalid login",
-            "username"   => $user,
-            "password"   => $pass
+            "exp_date"   => 0,
+            "is_trial"   => "0"
         ],
         "server_info" => [
             "url"             => "",
@@ -44,11 +56,16 @@ if ($user !== $VALID_USER || $pass !== $VALID_PASS) {
     exit;
 }
 
-$proto = isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https" : "http";
+// ✅ Reliable protocol detection
+$proto = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") ||
+         ($_SERVER["SERVER_PORT"] ?? 80) === 443 ||
+         (!empty($_SERVER["HTTP_X_FORWARDED_PROTO"]) && $_SERVER["HTTP_X_FORWARDED_PROTO"] === "https")
+         ? "https" : "http";
+
 $host  = $_SERVER["HTTP_HOST"];
 $base  = "$proto://$host";
 
-// ✅ STANDARDIZED user_info — exact fields Xtream API uses
+// ✅ Standardized user_info — exact Xtream Codes fields & order
 $userInfo = [
     "username"              => $user,
     "password"              => $pass,
@@ -62,7 +79,7 @@ $userInfo = [
     "allowed_output_formats"=> ["m3u8", "ts", "mp4", "mkv"]
 ];
 
-// ✅ STANDARDIZED server_info — exact fields XCIPTV/Smart IPTV expect
+// ✅ Standardized server_info — all players verify these exact fields
 $serverInfo = [
     "url"             => parse_url($base, PHP_URL_HOST),
     "port"            => $proto === "https" ? "443" : "80",
@@ -76,7 +93,7 @@ $serverInfo = [
     "time_now"        => date("Y-m-d H:i:s")
 ];
 
-// ⚠️ Wikimedia links fail — replace with your own hosted logos
+// ⚠️ Replace these with your own hosted logos — Wikimedia links fail due to size restrictions
 $logo_base = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Flag_of_Brazil.svg/120px-Flag_of_Brazil.svg.png";
 
 // ==================================================
@@ -273,7 +290,7 @@ foreach ($series_raw as $s) {
 }
 
 // ==================================================
-// 🔄 API ROUTING — STANDARDIZED RESPONSES
+// 🔄 API ROUTING
 // ==================================================
 switch ($action) {
     // === LIVE TV ===
