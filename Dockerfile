@@ -6,7 +6,7 @@ COPY ./ /var/www/html/
 
 # Critical: Allow .htaccess
 RUN sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/sites-available/000-default.conf
-RUN echo "DirectoryIndex index.html index.php player_api.php get.php" >> /etc/apache2/mods-enabled/dir.conf
+RUN echo "DirectoryIndex index.html index.php player_api.php get.php config.php stream.php" >> /etc/apache2/mods-enabled/dir.conf
 
 RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
 
