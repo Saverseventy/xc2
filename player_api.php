@@ -2,6 +2,7 @@
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
 // --------------------------
 // LOGIN CREDENTIALS
@@ -9,33 +10,51 @@ header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 $VALID_USER = "admin";
 $VALID_PASS = "123456";
 
-$user      = $_GET["username"] ?? "";
-$pass      = $_GET["password"] ?? "";
-$action    = $_GET["action"] ?? "";
-$catFilter = $_GET["category_id"] ?? "";
-$vod_id    = $_GET["vod_id"] ?? "";
-$series_id = $_GET["series_id"] ?? "";
+// ✅ SUPPORT BOTH GET & POST (critical for many players)
+$input = array_merge($_GET, $_POST);
+
+$user      = $input["username"] ?? "";
+$pass      = $input["password"] ?? "";
+$action    = $input["action"] ?? "";
+$catFilter = $input["category_id"] ?? "";
+$vod_id    = $input["vod_id"] ?? "";
+$series_id = $input["series_id"] ?? "";
 
 // --------------------------
 // AUTHENTICATION
 // --------------------------
 if ($user !== $VALID_USER || $pass !== $VALID_PASS) {
     echo json_encode([
-        "user_info" => ["auth" => 0, "status" => "Disabled", "message" => "Invalid login"]
-    ], JSON_PRETTY_PRINT);
+        "user_info" => [
+            "auth"       => 0,
+            "status"     => "Disabled",
+            "message"    => "Invalid login",
+            "username"   => $user,
+            "password"   => $pass
+        ],
+        "server_info" => [
+            "url"             => "",
+            "port"            => "",
+            "https_port"      => "",
+            "server_protocol" => "",
+            "https"           => 0,
+            "xt"              => 1
+        ]
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-$proto = isset($_SERVER["HTTPS"]) ? "https" : "http";
+$proto = isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https" : "http";
 $host  = $_SERVER["HTTP_HOST"];
 $base  = "$proto://$host";
 
+// ✅ STANDARDIZED user_info — exact fields Xtream API uses
 $userInfo = [
     "username"              => $user,
     "password"              => $pass,
     "auth"                  => 1,
     "status"                => "Active",
-    "exp_date"              => "1999999999",
+    "exp_date"              => 1999999999,
     "is_trial"              => "0",
     "active_cons"           => 0,
     "created_at"            => time(),
@@ -43,12 +62,13 @@ $userInfo = [
     "allowed_output_formats"=> ["m3u8", "ts", "mp4", "mkv"]
 ];
 
+// ✅ STANDARDIZED server_info — exact fields XCIPTV/Smart IPTV expect
 $serverInfo = [
     "url"             => parse_url($base, PHP_URL_HOST),
     "port"            => $proto === "https" ? "443" : "80",
     "https_port"      => "443",
     "server_protocol" => $proto,
-    "https"           => ($proto === "https"),
+    "https"           => ($proto === "https") ? 1 : 0,
     "xt"              => 1,
     "url_https"       => $base,
     "timezone"        => "America/Sao_Paulo",
@@ -56,11 +76,11 @@ $serverInfo = [
     "time_now"        => date("Y-m-d H:i:s")
 ];
 
+// ⚠️ Wikimedia links fail — replace with your own hosted logos
 $logo_base = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Flag_of_Brazil.svg/120px-Flag_of_Brazil.svg.png";
 
 // ==================================================
-// 🟢 LIVE TV: CATEGORIES + METADATA ONLY
-// stream_id = num + 1000 → PERFECT MATCH with live.php
+// 🟢 LIVE TV
 // ==================================================
 $live_categories = [
     ["category_id" => "1", "category_name" => "📺 General",         "parent_id" => 0],
@@ -70,7 +90,6 @@ $live_categories = [
     ["category_id" => "5", "category_name" => "📰 News & Info",      "parent_id" => 0],
     ["category_id" => "6", "category_name" => "🇵🇭 Philippines",     "parent_id" => 0]
 ];
-
 
 $live_raw = [
     ["num"=>1,"name"=>"TNT","cat"=>"2","logo"=>"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/TNT_Serious_Logo.svg/120px-TNT_Serious_Logo.svg.png"],
@@ -98,29 +117,27 @@ $live_raw = [
     ["num"=>23,"name"=>"WESTERN BOUND","cat"=>"2","logo"=>$logo_base],
     ["num"=>24,"name"=>"WHE PLAY","cat"=>"1","logo"=>$logo_base],
     ["num"=>25,"name"=>"X SPORTS","cat"=>"4","logo"=>$logo_base],
-["num"=>26,"name"=>"GMA News TV","cat"=>"6","logo"=>"https://upload.wikimedia.org/wikipedia/en/thumb/0/04/GMA_News_TV_Logo_Vector.svg/1280px-GMA_News_TV_Logo_Vector.svg.png"],
-
+    ["num"=>26,"name"=>"GMA News TV","cat"=>"6","logo"=>"https://upload.wikimedia.org/wikipedia/en/thumb/0/04/GMA_News_TV_Logo_Vector.svg/1280px-GMA_News_TV_Logo_Vector.svg.png"],
 ];
 
 $live = [];
 foreach ($live_raw as $s) {
     $live[] = [
-        "num"               => $s["num"],
-        "name"              => $s["name"],
-        "stream_type"       => "live",
-        "stream_id"         => $s["num"] + 1000,
-        "stream_icon"       => $s["logo"],
-        "category_id"       => $s["cat"],
-        "epg_channel_id"    => strtolower(str_replace(" ", "_", $s["name"])),
-        "tv_archive"        => 0,
-        "tv_archive_duration"=> 0,
-        "direct_source"     => ""
+        "num"                  => (int)$s["num"],
+        "name"                 => $s["name"],
+        "stream_type"          => "live",
+        "stream_id"            => (int)($s["num"] + 1000),
+        "stream_icon"          => $s["logo"],
+        "category_id"          => (string)$s["cat"],
+        "epg_channel_id"       => strtolower(str_replace(" ", "_", $s["name"])),
+        "tv_archive"           => 0,
+        "tv_archive_duration"  => 0,
+        "direct_source"        => ""
     ];
 }
 
 // ==================================================
-// 🟠 MOVIES: CATEGORIES + FULL METADATA + LOGOS
-// vod_id: 2001–2999 → matches movie.php
+// 🟠 MOVIES / VOD
 // ==================================================
 $vod_categories = [
     ["category_id"=>"201","category_name"=>"🎬 Action","parent_id"=>0],
@@ -157,13 +174,13 @@ $vod_raw = [
 $vod = [];
 foreach ($vod_raw as $m) {
     $vod[] = [
-        "vod_id"             => $m["id"],
-        "num"                => $m["id"] - 2000 + 1,
-        "name"               => $m["name"],
-        "stream_icon"        => $m["logo"],
-        "category_id"        => $m["cat"],
-        "container_extension" => "mp4",
-        "direct_source"      => "",
+        "vod_id"               => (int)$m["id"],
+        "num"                  => (int)($m["id"] - 2000 + 1),
+        "name"                 => $m["name"],
+        "stream_icon"          => $m["logo"],
+        "category_id"          => (string)$m["cat"],
+        "container_extension"  => "mp4",
+        "direct_source"        => "",
         "info" => [
             "plot"       => $m["plot"],
             "genre"      => $m["genre"],
@@ -180,8 +197,7 @@ foreach ($vod_raw as $m) {
 }
 
 // ==================================================
-// 🔵 SERIES: CATEGORIES + LOGOS + FULL SEASONS/EPISODES
-// series_id:3001–3999 | episode_id:3001001 → matches series.php
+// 🔵 SERIES
 // ==================================================
 $series_categories = [
     ["category_id"=>"301","category_name"=>"📺 Brazilian Series","parent_id"=>0],
@@ -242,9 +258,9 @@ $series_raw = [
 $series_list = [];
 foreach ($series_raw as $s) {
     $series_list[] = [
-        "series_id"     => $s["series_id"],
+        "series_id"     => (int)$s["series_id"],
         "name"          => $s["name"],
-        "category_id"   => $s["cat"],
+        "category_id"   => (string)$s["cat"],
         "cover"         => $s["logo"],
         "stream_icon"   => $s["logo"],
         "plot"          => $s["plot"],
@@ -257,41 +273,41 @@ foreach ($series_raw as $s) {
 }
 
 // ==================================================
-// 🔄 API ROUTING
+// 🔄 API ROUTING — STANDARDIZED RESPONSES
 // ==================================================
 switch ($action) {
     // === LIVE TV ===
     case "get_live_categories":
-        echo json_encode($live_categories, JSON_PRETTY_PRINT);
+        echo json_encode($live_categories, JSON_UNESCAPED_UNICODE);
         break;
     case "get_live_streams":
         $out = $live;
         if ($catFilter !== '') $out = array_values(array_filter($out, fn($i) => $i["category_id"] === $catFilter));
-        echo json_encode($out, JSON_PRETTY_PRINT);
+        echo json_encode($out, JSON_UNESCAPED_UNICODE);
         break;
 
     // === MOVIES / VOD ===
     case "get_vod_categories":
-        echo json_encode($vod_categories, JSON_PRETTY_PRINT);
+        echo json_encode($vod_categories, JSON_UNESCAPED_UNICODE);
         break;
     case "get_vod_streams":
         $out = $vod;
         if ($catFilter !== '') $out = array_values(array_filter($out, fn($i) => $i["category_id"] === $catFilter));
-        echo json_encode($out, JSON_PRETTY_PRINT);
+        echo json_encode($out, JSON_UNESCAPED_UNICODE);
         break;
     case "get_vod_info":
         $found = array_filter($vod, fn($i) => (string)$i["vod_id"] === (string)$vod_id);
-        echo $found ? json_encode(reset($found), JSON_PRETTY_PRINT) : '{}';
+        echo $found ? json_encode(reset($found), JSON_UNESCAPED_UNICODE) : '{}';
         break;
 
     // === SERIES ===
     case "get_series_categories":
-        echo json_encode($series_categories, JSON_PRETTY_PRINT);
+        echo json_encode($series_categories, JSON_UNESCAPED_UNICODE);
         break;
     case "get_series":
         $out = $series_list;
         if ($catFilter !== '') $out = array_values(array_filter($out, fn($i) => $i["category_id"] === $catFilter));
-        echo json_encode($out, JSON_PRETTY_PRINT);
+        echo json_encode($out, JSON_UNESCAPED_UNICODE);
         break;
     case "get_series_info":
         $result = [];
@@ -302,31 +318,31 @@ switch ($action) {
                     $seps = [];
                     foreach ($elist as $e) {
                         $seps[] = [
-                            "id"                  => $e["id"],
-                            "episode_num"         => $e["num"],
+                            "id"                  => (int)$e["id"],
+                            "episode_num"         => (int)$e["num"],
                             "title"               => $e["title"],
                             "container_extension" => "mp4",
-                            "info"                => ["duration" => $e["duration"]]
+                            "info"                => ["duration" => (int)$e["duration"]]
                         ];
                     }
-                    $eps[$sn] = $seps;
+                    $eps[(string)$sn] = $seps;
                 }
                 $result = [
                     "info" => [
-                        "name"        => $sr["name"],
-                        "cover"       => $sr["logo"],
-                        "stream_icon" => $sr["logo"],
-                        "plot"        => $sr["plot"],
-                        "genre"       => $sr["genre"],
-                        "rating"      => $sr["rating"],
-                        "releaseDate" => explode("‑", $sr["year"])[0],
-                        "category_id" => $sr["cat"]
+                        "name"         => $sr["name"],
+                        "cover"        => $sr["logo"],
+                        "stream_icon"  => $sr["logo"],
+                        "plot"         => $sr["plot"],
+                        "genre"        => $sr["genre"],
+                        "rating"       => $sr["rating"],
+                        "releaseDate"  => explode("‑", $sr["year"])[0],
+                        "category_id"  => (string)$sr["cat"]
                     ],
                     "episodes" => $eps
                 ];
             }
         }
-        echo json_encode($result, JSON_PRETTY_PRINT);
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
         break;
 
     // === ACCOUNT INFO / DEFAULT ===
@@ -335,5 +351,6 @@ switch ($action) {
         echo json_encode([
             "user_info"   => $userInfo,
             "server_info" => $serverInfo
-        ], JSON_PRETTY_PRINT);
+        ], JSON_UNESCAPED_UNICODE);
 }
+exit;
